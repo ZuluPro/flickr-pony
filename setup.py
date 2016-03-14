@@ -22,7 +22,7 @@ setup(
     license='BSD',
     url=flickr_pony.__url__,
     keywords=['django', 'flickr', 'storage', 'cloud'],
-    # packages=find_packages(exclude=['tests.runtests.main']),
+    packages=find_packages(exclude=['demo_project']),
     # test_suite='tests.runtests.main',
     classifiers=[
         'Development Status :: 4 - Beta',
