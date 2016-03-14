@@ -1,0 +1,22 @@
+html {
+  background: #B4E0FF;
+}
+
+#form {
+  text-align: center;
+}
+#form * {
+  height: 30px;
+  vertical-align: middle;
+  border-style: none;
+  border-radius: 3px;
+}
+#form input {
+  height: 30px;
+  width: 300px;
+  text-align: center;
+}
+#form button {
+  background: #5494D7;
+  color: #FFFFFF;
+}
