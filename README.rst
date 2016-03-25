@@ -18,7 +18,6 @@ object-storge, we consider all pics from all users in the same bucket but
 different directories. So what should a be directory path on other storages
 will be a user ID in this one.
 
-
 Docs
 ====
 
@@ -45,6 +44,23 @@ if you want to automatize action related to this user.
 .. warning::
     Get all authentication info may be really long and boring, we advise you
     this page http://acme.com/flickr/authmap.html
+
+Demo
+====
+
+A demo project is available for testing and trying purpose, for use it: ::
+
+    python setup.py develop
+    cd demo_project
+    export FLICKR_API_KEY="YourFlickrApiKey" # Mandatory
+    # export FLICKR_USER_ID="YourFlickrUserId"
+    ./manage runserver
+
+You can also deploy in on Heroku:
+
+.. image:: https://www.herokucdn.com/deploy/button.svg
+        :target: https://heroku.com/deploy?template=https://github.com/ZuluPro/flickr-pony
+
 
 Contributing
 ============
