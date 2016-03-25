@@ -226,10 +226,11 @@ class FlickrStorage(Storage):
         })
         response = self.oauth_session.post(self.API_POST_URL, params=params,
                                            files={'photo': content.file})
-        # TODO: Make clear XML Parsing
-        if not (response.status_code == 200 and 'stat="ok"' in response.content):
-            raise FileSaveError("Unable to save file: %s" % response.content)
         xmldoc = minidom.parseString(response.content)
+        rsp = xmldoc.getElementsByTagName('rsp')[0]
+        if rsp.getAttribute('stat') == 'fail':
+            msg = xmldoc.getElementsByTagName('err')[0].getAttribute('msg')
+            raise FileSaveError(msg)
         photo_id = xmldoc.getElementsByTagName('photoid')[0].firstChild.nodeValue
         return photo_id
 

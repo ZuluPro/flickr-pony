@@ -146,7 +146,7 @@ class FlickrModifiedTimeTest(BaseFlickrTestCase):
 
 class FlickrSaveTest(BaseFlickrTestCase):
     def test_save(self):
-        photo = BytesIO("Foo")
+        photo = BytesIO(b"Foo")
         photo_id = self.storage.save('foo', photo)
         self.assertTrue(photo_id.isdigit())
 
