@@ -1,3 +1,4 @@
+===========
 Flickr Pony 
 ===========
 
@@ -18,17 +19,11 @@ object-storge, we consider all pics from all users in the same bucket but
 different directories. So what should a be directory path on other storages
 will be a user ID in this one.
 
-Docs
-====
-
-Comming...
-
-
 Settings
 ========
 
 **api_key** : Findable at
-`https://www.flickr.com/services/apps/create/apply/`_, it is the only one
+https://www.flickr.com/services/apps/create/apply/, it is the only one
 mandatory data for read operations.
 
 **api_secret** : Given with the API KEY
@@ -41,7 +36,7 @@ mandatory data for read operations.
 It is the last part of URL example: ``140893176@N07``. This data is useful
 if you want to automatize action related to this user.
 
-.. warning::
+.. warn::
     Get all authentication info may be really long and boring, we advise you
     this page http://acme.com/flickr/authmap.html
 
@@ -50,16 +45,18 @@ Demo
 
 A demo project is available for testing and trying purpose, for use it: ::
 
-    python setup.py develop
+    git clone https://github.com/ZuluPro/flickr-pony-demo
+    cd flickr-pony-demo
+    pip install requirements.txt
     cd demo_project
     export FLICKR_API_KEY="YourFlickrApiKey" # Mandatory
     # export FLICKR_USER_ID="YourFlickrUserId"
     ./manage runserver
 
-You can also deploy in on Heroku:
+You can also deploy it on Heroku:
 
 .. image:: https://www.herokucdn.com/deploy/button.svg
-        :target: https://heroku.com/deploy?template=https://github.com/ZuluPro/flickr-pony
+        :target: https://heroku.com/deploy?template=https://github.com/ZuluPro/flickr-pony-demo
 
 
 Contributing

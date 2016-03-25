@@ -1,9 +1,0 @@
-{
-  "name": "Flickr Pony Demo",
-  "description": "A demo of flickr usage with Django",
-  "repository": "https://github.com/ZuluPro/flickr-pony",
-  "keywords": ["django", "storage", "static", "flickr"],
-  "scripts": {
-    "postdeploy": "pip install gunicorn"
-  }
-}
