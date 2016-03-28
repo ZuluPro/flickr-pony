@@ -19,8 +19,28 @@ object-storge, we consider all pics from all users in the same bucket but
 different directories. So what should a be directory path on other storages
 will be a user ID in this one.
 
+Install
+=======
+
+A classic :::
+
+    pip install flickr-pony
+
+or::
+
+    git clone https://github.com/ZuluPro/flickr-pony.git
+    cd flickr-pony
+    python setup.py develop
+
+It isn't necessary to include data in ``settings.FLICKR_STORAGE_OPTIONS``, and
+settings are explained below.
+
+
 Settings
 ========
+
+The storage can be configured with the following parameters, at instanciation or
+by set a dictionary named ``FLICKR_STORAGE_OPTIONS`` in your ``settings.py``.
 
 **api_key** : Findable at
 https://www.flickr.com/services/apps/create/apply/, it is the only one
@@ -36,9 +56,60 @@ mandatory data for read operations.
 It is the last part of URL example: ``140893176@N07``. This data is useful
 if you want to automatize action related to this user.
 
-.. warn::
-    Get all authentication info may be really long and boring, we advise you
-    this page http://acme.com/flickr/authmap.html
+
+Info
+  Get all authentication info may be really long and boring, we advise you
+  this page http://acme.com/flickr/authmap.html
+
+Usage
+=====
+
+This storage has a simple usage as define in Django Storage API plus others
+method for play more easily with pictures. You can list a user's photos with: ::
+
+    >>> from flickr_pony.storage import FlickrStorage
+    >>> storage = FlickrStorage(api_key="myApiKey")
+    >>> storage.listdir('140893176@N07')
+    ([], ['https://farm2.staticflickr.com/1586/25309081103_518e989396_o.jpg',
+     'https://farm2.staticflickr.com/1623/25911906696_84c8cf31ae_o.jpg',
+     'https://farm2.staticflickr.com/1617/25637193860_98a08d224f_o.jpg',
+     ...
+     'https://farm2.staticflickr.com/1671/25794942526_5b54c8a908_o.jpg',
+     'https://farm2.staticflickr.com/1653/25820730145_4040532d03_o.jpg'])
+
+It will return image in original if you are allowed to get it, but it could be too
+heavy for some usage, so you can use decide get it in "medium" format: ::
+
+    >>> storage.listdir('140893176@N07', original=False)
+    ([], ['https://farm2.staticflickr.com/1586/25309081103_d132f2fa3f.jpg',
+     ...
+     'https://farm2.staticflickr.com/1623/25911906696_cee21c32be.jpg',
+     'https://farm2.staticflickr.com/1653/25820730145_ef8db88e60.jpg'])
+
+Or in "small" size: ::
+
+    >>> storage.listdir('140893176@N07', original=False, size='s')
+    ([], ['https://farm2.staticflickr.com/1586/25309081103_d132f2fa3f.jpg',
+     ...
+     'https://farm2.staticflickr.com/1623/25911906696_cee21c32be.jpg',
+     'https://farm2.staticflickr.com/1653/25820730145_ef8db88e60.jpg'])
+
+For image gallery, you could also decide to list original and thumbnail: ::
+
+    >>> storage.list_image_and_thumb()
+    [('https://farm2.staticflickr.com/1586/25309081103_d132f2fa3f.jpg',
+      'https://farm2.staticflickr.com/1586/25309081103_518e989396_o.jpg'),
+    ...
+     ('https://farm2.staticflickr.com/1623/25911906696_cee21c32be.jpg',
+      'https://farm2.staticflickr.com/1623/25911906696_84c8cf31ae_o.jpg')]
+        
+Uploading and deleting are available: ::
+
+    >>> from django.core.files import File
+    >>> with open('myPic', 'rb') as img:
+    ...     storage.save('picName', img)
+        '25839776716'
+    >>> storage.delete('25839776716')
 
 Demo
 ====
