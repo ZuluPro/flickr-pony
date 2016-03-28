@@ -5,14 +5,20 @@ from django.test import TestCase
 from django.utils.six import BytesIO
 from django.core.exceptions import ImproperlyConfigured
 from flickr_pony.storage import (FlickrStorage, FileNotFound, FileSaveError,
-                                 get_flickr_storage)
+                                 FlickrError, get_flickr_storage)
 from . import fixtures
 
 API_KEY = 'cac50045e7cc97328169ed50602fac4d'
 API_SECRET = 'a5aaa065af3900d4'
 OAUTH_TOKEN = '72157665729827041199006029242ec38d'
 OAUTH_TOKEN_SECRET = '44b83f7ef19c6728'
+
 USER_ID = '06509042@N00'
+USERNAME = 'FooUser'
+EMAIL = 'foo@bar.com'
+BAD_USER_ID = '06509042@N42'
+BAD_USERNAME = 'BarUser'
+BAD_EMAIL = 'bar@foo.com'
 
 FILE_ID = '06021990'
 BAD_FILE_ID = '424242'
@@ -35,6 +41,16 @@ class BaseFlickrTestCase(TestCase):
                     body = fixtures.GET_PHOTO_NOT_FOUND
                 else:
                     body = fixtures.DELETE_OK
+            elif method == 'flickr.people.findByEmail':
+                if request.querystring['find_email'][0] == BAD_EMAIL:
+                    body = fixtures.USER_NOT_FOUND
+                else:
+                    body = fixtures.GET_USER_ID
+            elif method == 'flickr.people.findByUsername':
+                if request.querystring['username'][0] == BAD_USERNAME:
+                    body = fixtures.USER_NOT_FOUND
+                else:
+                    body = fixtures.GET_USER_ID
             return (code, headers, body)
 
         def _upload_callback(request, uri, headers):
@@ -211,6 +227,20 @@ class FlickrUrlTest(BaseFlickrTestCase):
 class FlickrCheckSettings(TestCase):
     def test_check_settings(self):
         self.assertRaises(ImproperlyConfigured, FlickrStorage, None)
+
+
+class FlickrGetUserId(BaseFlickrTestCase):
+    def test_get_user_id_from_email(self):
+        id_ = self.storage.get_user_id(EMAIL)
+        self.assertEqual(USER_ID, id_)
+
+    def test_get_user_id_from_username(self):
+        id_ = self.storage.get_user_id(USERNAME)
+        self.assertEqual(USER_ID, id_)
+
+    def test_get_user_id_not_found(self):
+        self.assertRaises(FlickrError, self.storage.get_user_id,
+                          BAD_USERNAME)
 
 
 class GetFlickrStorageTest(TestCase):

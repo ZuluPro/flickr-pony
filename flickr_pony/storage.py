@@ -280,6 +280,8 @@ class FlickrStorage(Storage):
 
     def delete(self, name):
         """
+        Delete a file and don't do anything if it doesn't exist.
+
         :param name: ID of the desired file
         :type name: str
         """
@@ -291,6 +293,31 @@ class FlickrStorage(Storage):
         json_response = response.json()
         if json_response['stat'] == 'fail' and json_response['code'] != 1:
             raise FlickrError(json_response['message'])
+
+    def get_user_id(self, name):
+        """
+        Get user ID from its username or email
+
+        :param name: Username or email
+        :type name: str
+        :return: User ID, example ``'140893176@N07'``
+        :rtype: str
+        """
+        if '@' in name:
+            params = {
+                'method': 'flickr.people.findByEmail',
+                'find_email': name
+            }
+        else:
+            params = {
+                'method': 'flickr.people.findByUsername',
+                'username': name
+            }
+        response = self.oauth_session.get(self.API_ENDPOINT, params=params)
+        json_response = response.json()
+        if json_response['stat'] == 'fail':
+            raise FlickrError(json_response['message'])
+        return json_response['user']['id']
 
 
 def get_flickr_storage(**options):
