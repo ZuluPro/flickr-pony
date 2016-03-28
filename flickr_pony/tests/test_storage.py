@@ -245,5 +245,10 @@ class FlickrGetUserId(BaseFlickrTestCase):
 
 class GetFlickrStorageTest(TestCase):
     def test_get_flickr_storage(self):
+        from django.conf import settings
+        storage = get_flickr_storage()
+        api_key = settings.FLICKR_STORAGE_OPTIONS['api_key']
+        self.assertEqual(api_key, storage.api_key)
+
         storage = get_flickr_storage(api_key='Foo')
         self.assertEqual(storage.api_key, 'Foo')

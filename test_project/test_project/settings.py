@@ -56,6 +56,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 FLICKR_STORAGE_OPTIONS = {
-    'api_key': os.environ.get('FLICKR_API_KEY'),
-    'user_id': os.environ.get('FLICKR_USER_ID')
+    'api_key': os.environ.get('FLICKR_API_KEY', 'cac50045e7cc97328169ed50602fac4d'),
+    'user_id': os.environ.get('FLICKR_USER_ID', '06509042@N00')
 }

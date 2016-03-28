@@ -3,12 +3,9 @@ from setuptools import setup, find_packages
 import flickr_pony
 
 
-def get_requirements():
-    return open('requirements.txt').read().splitlines()
-
-
-def get_test_requirements():
-    return open('requirements-tests.txt').read().splitlines()
+def get_file(addr):
+    with open(addr, 'r') as fi:
+        return fi.read()
 
 
 setup(
@@ -17,13 +14,13 @@ setup(
     description=flickr_pony.__doc__,
     author=flickr_pony.__author__,
     author_email=flickr_pony.__email__,
-    install_requires=get_requirements(),
-    tests_require=get_test_requirements(),
+    install_requires=get_file('./requirements.txt').splitlines(),
+    tests_require=get_file('./requirements-tests.txt').splitlines(),
+    long_description=get_file('README.rst'),
     license='BSD',
     url=flickr_pony.__url__,
     keywords=['django', 'flickr', 'storage', 'cloud'],
     packages=find_packages(exclude=['demo_project']),
-    # test_suite='tests.runtests.main',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

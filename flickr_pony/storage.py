@@ -328,4 +328,4 @@ def get_flickr_storage(**options):
     from django.conf import settings
     used_options = getattr(settings, 'FLICKR_STORAGE_OPTIONS', {}).copy()
     used_options.update(options)
-    return FlickrStorage(**options)
+    return FlickrStorage(**used_options)
