@@ -3,7 +3,9 @@ from datetime import datetime
 import httpretty
 from django.test import TestCase
 from django.utils.six import BytesIO
-from flickr_pony.storage import FlickrStorage, FileNotFound, FileSaveError
+from django.core.exceptions import ImproperlyConfigured
+from flickr_pony.storage import (FlickrStorage, FileNotFound, FileSaveError,
+                                 get_flickr_storage)
 from . import fixtures
 
 API_KEY = 'cac50045e7cc97328169ed50602fac4d'
@@ -12,6 +14,7 @@ OAUTH_TOKEN = '72157665729827041199006029242ec38d'
 OAUTH_TOKEN_SECRET = '44b83f7ef19c6728'
 USER_ID = '06509042@N00'
 
+FILE_ID = '06021990'
 BAD_FILE_ID = '424242'
 
 
@@ -27,6 +30,11 @@ class BaseFlickrTestCase(TestCase):
                     body = fixtures.GET_PHOTO_NOT_FOUND
                 else:
                     body = fixtures.GET_PHOTO
+            elif method == 'flickr.photos.delete':
+                if request.querystring['photo_id'][0] == BAD_FILE_ID:
+                    body = fixtures.GET_PHOTO_NOT_FOUND
+                else:
+                    body = fixtures.DELETE_OK
             return (code, headers, body)
 
         def _upload_callback(request, uri, headers):
@@ -39,6 +47,9 @@ class BaseFlickrTestCase(TestCase):
 
         httpretty.enable()
         httpretty.register_uri(httpretty.GET, FlickrStorage.API_ENDPOINT,
+                               body=_api_callback,
+                               content_type='text/json')
+        httpretty.register_uri(httpretty.POST, FlickrStorage.API_ENDPOINT,
                                body=_api_callback,
                                content_type='text/json')
         httpretty.register_uri(httpretty.POST, FlickrStorage.API_POST_URL,
@@ -108,7 +119,7 @@ class FlickrListImageAndThumbTest(BaseFlickrTestCase):
 
 class FlickrGetFileInfoTest(BaseFlickrTestCase):
     def test_get_info(self):
-        photo = self.storage._get_file_info('06021990')
+        photo = self.storage._get_file_info(FILE_ID)
         self.assertIsInstance(photo, dict)
 
     def test_file_not_found(self):
@@ -118,7 +129,7 @@ class FlickrGetFileInfoTest(BaseFlickrTestCase):
 
 class FlickrCreatedTimeTest(BaseFlickrTestCase):
     def test_created_time(self):
-        date = self.storage.created_time('06021990')
+        date = self.storage.created_time(FILE_ID)
         self.assertIsInstance(date, datetime)
 
     def test_file_not_found(self):
@@ -128,7 +139,7 @@ class FlickrCreatedTimeTest(BaseFlickrTestCase):
 
 class FlickrExistsTest(BaseFlickrTestCase):
     def test_exists(self):
-        self.assertTrue(self.storage.exists('06021990'))
+        self.assertTrue(self.storage.exists(FILE_ID))
 
     def test_not_exists(self):
         self.assertFalse(self.storage.exists(BAD_FILE_ID))
@@ -136,7 +147,7 @@ class FlickrExistsTest(BaseFlickrTestCase):
 
 class FlickrModifiedTimeTest(BaseFlickrTestCase):
     def test_modified_time(self):
-        date = self.storage.modified_time('06021990')
+        date = self.storage.modified_time(FILE_ID)
         self.assertIsInstance(date, datetime)
 
     def test_file_not_found(self):
@@ -175,13 +186,34 @@ class FlickrFormatUrlTest(BaseFlickrTestCase):
                           self.photo, original=False, size='&')
 
 
+class FlickrDeleteTest(BaseFlickrTestCase):
+    def test_delete(self):
+        self.storage.delete(FILE_ID)
+
+    def test_delete_not_found(self):
+        self.storage.delete(BAD_FILE_ID)
+
+
 class FlickrUrlTest(BaseFlickrTestCase):
     def test_original(self):
-        pass
+        url = self.storage.url(FILE_ID)
+        self.assertTrue(url.endswith('_o.jpg'))
 
     def test_size_m(self):
-        pass
+        url = self.storage.url(FILE_ID, original=False, size='m')
+        self.assertTrue(url.endswith('.jpg'))
 
     def test_file_not_found(self):
-        self.assertRaises(FileNotFound, self.storage._get_file_info,
+        self.assertRaises(FileNotFound, self.storage.url,
                           BAD_FILE_ID)
+
+
+class FlickrCheckSettings(TestCase):
+    def test_check_settings(self):
+        self.assertRaises(ImproperlyConfigured, FlickrStorage, None)
+
+
+class GetFlickrStorageTest(TestCase):
+    def test_get_flickr_storage(self):
+        storage = get_flickr_storage(api_key='Foo')
+        self.assertEqual(storage.api_key, 'Foo')

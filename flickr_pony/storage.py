@@ -2,6 +2,7 @@ from xml.dom import minidom
 from datetime import datetime
 from requests_oauthlib import OAuth1Session
 from django.core.files.storage import Storage
+from django.core.exceptions import ImproperlyConfigured
 
 
 class FlickrError(Exception):
@@ -32,6 +33,11 @@ class FlickrStorage(Storage):
     THUMB_URL_TEMPLATE = "https://farm{farm}.staticflickr.com/{server}/{id}_"\
                          "{secret}.jpg"
 
+    def _check_settings(self):
+        """Verify if instanciation data are valid."""
+        if self.api_key is None:
+            raise ImproperlyConfigured("You must provide an API key.")
+
     def __init__(self, api_key, api_secret=None, oauth_token=None,
                  oauth_token_secret=None, user_id=None):
         """
@@ -60,31 +66,12 @@ class FlickrStorage(Storage):
             resource_owner_key=oauth_token,
             resource_owner_secret=oauth_token_secret)
         self.user_id = user_id
-        self._request_default_params = {
+        self._check_settings()
+        self.oauth_session.params.update({
             'api_key': self.api_key,
             'format': 'json',
             'nojsoncallback': '1'
-        }
-
-    def _make_request_params(self, method, options=None):
-        """
-        Create a dictionary from minimum parameters needed for request API and
-        given data.
-
-        :param method: Method used, example 'flickr.people.getPublicPhotos'
-        :type method: str
-
-        :param options: Parameters to add to request
-        :type method: dict
-
-        :return: Request parameters
-        :rtype: dict
-        """
-        options = options or {}
-        params = self._request_default_params.copy()
-        params['method'] = method
-        params.update(options)
-        return params
+        })
 
     def listdir(self, path=None, original=True, size='m'):
         """
@@ -112,9 +99,11 @@ class FlickrStorage(Storage):
         wanted_size = 'url_o' if original else 'url_%s' % size
         fallback_size = 'url_%s' % size if original else 'url_m'
         extras = ','.join([wanted_size, fallback_size])
-        params = self._make_request_params('flickr.people.getPublicPhotos',
-                                           {'user_id': user_id,
-                                            'extras': extras})
+        params = {
+            'method': 'flickr.people.getPublicPhotos',
+            'user_id': user_id,
+            'extras': extras
+        }
         response = self.oauth_session.get(self.API_ENDPOINT, params=params)
         json_response = response.json()
         if json_response['stat'] == 'fail':
@@ -147,9 +136,11 @@ class FlickrStorage(Storage):
                              "storage instanciation or at "
                              "list_image_and_thumb launching.")
         size = 'url_%s' % size
-        params = self._make_request_params('flickr.people.getPublicPhotos',
-                                           {'user_id': user_id,
-                                            'extras': 'url_o,url_m,%s' % size})
+        params = {
+            'method': 'flickr.people.getPublicPhotos',
+            'user_id': user_id,
+            'extras': 'url_o,url_m,%s' % size
+        }
         response = self.oauth_session.get(self.API_ENDPOINT, params=params)
         json_response = response.json()
         if json_response['stat'] == 'fail':
@@ -170,8 +161,10 @@ class FlickrStorage(Storage):
 
         :raises: :class:`.FileNotFound` if can't find file
         """
-        params = self._make_request_params('flickr.photos.getInfo',
-                                           {'photo_id': photo_id})
+        params = {
+            'method': 'flickr.photos.getInfo',
+            'photo_id': photo_id
+        }
         response = self.oauth_session.get(self.API_ENDPOINT,
                                           params=params).json()
         if response['stat'] == 'fail':
@@ -211,8 +204,7 @@ class FlickrStorage(Storage):
         if not self.oauth_token:
             raise AuthenticationError("You must be authenticated with oAuth "
                                       "for upload files.")
-        params = self._request_default_params.copy()
-        params.update({
+        params = {
             'title': name,
             # 'description': description,
             # 'tags': tags,
@@ -223,7 +215,7 @@ class FlickrStorage(Storage):
             # 'safety_level': safety_level,
             # 'content_type': content_type,
             # 'hidden': hidden
-        })
+        }
         response = self.oauth_session.post(self.API_POST_URL, params=params,
                                            files={'photo': content.file})
         xmldoc = minidom.parseString(response.content)
@@ -285,6 +277,20 @@ class FlickrStorage(Storage):
         Useless with Flickr as any name can be given.
         """
         return name
+
+    def delete(self, name):
+        """
+        :param name: ID of the desired file
+        :type name: str
+        """
+        params = {
+            'method': 'flickr.photos.delete',
+            'photo_id': name,
+        }
+        response = self.oauth_session.post(self.API_ENDPOINT, params=params)
+        json_response = response.json()
+        if json_response['stat'] == 'fail' and json_response['code'] != 1:
+            raise FlickrError(json_response['message'])
 
 
 def get_flickr_storage(**options):
