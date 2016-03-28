@@ -285,3 +285,14 @@ class FlickrStorage(Storage):
         Useless with Flickr as any name can be given.
         """
         return name
+
+
+def get_flickr_storage(**options):
+    """
+    Get an instance of :class:`.FlickrStorage` instanciated with project
+    settings and given options.
+    """
+    from django.conf import settings
+    used_options = getattr(settings, 'FLICKR_STORAGE_OPTIONS', {}).copy()
+    used_options.update(options)
+    return FlickrStorage(**options)
