@@ -149,6 +149,35 @@ class FlickrStorage(Storage):
                 for pho in json_response['photos']['photo']]
         return urls
 
+    def list_all_size(self, path=None):
+        """
+        List user's photos with all possible sizes.
+
+        :param path: User's ID, example: '73509042@N00', default: User ID
+                     defined at instanciation
+        :type path: str
+
+        :return: A list of dict
+        :rtype: list of dict
+        """
+        user_id = path or self.user_id
+        if not user_id:
+            raise ValueError("You must either specify a user ID at "
+                             "storage instanciation or at "
+                             "list_image_and_thumb launching.")
+        url_types = ['url_o', 'url_s', 'url_q', 'url_t', 'url_l', 'url_m', 'url_n', 'url_z', 'url_c']
+        params = {
+            'method': 'flickr.people.getPublicPhotos',
+            'user_id': user_id,
+            'extras': ','.join(url_types)
+        }
+        response = self.oauth_session.get(self.API_ENDPOINT, params=params)
+        json_response = response.json()
+        if json_response['stat'] == 'fail':
+            raise FlickrError(json_response['message'])
+        urls = [pho for pho in json_response['photos']['photo']]
+        return urls
+
     def _get_file_info(self, photo_id):
         """
         Get informations for a single photo.
